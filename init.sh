@@ -60,12 +60,15 @@ function has_dedicated_branch {
     local readonly branch="$2"
     local readonly do_master=$3 #yes/no
 
-    if [[ $do_master = 'no' ]]; then
-        if [[ $branch = HEAD || $branch = master ]]; then
-            echo "Current branch is $branch, skipping check for branch in " \
-                 $remote_repos
-            return 1
-        fi
+    if [[ $branch = HEAD ]]; then
+        echo "Could not identify a branch for this environment"
+        return 1
+    fi
+
+    if [[ $do_master = 'no' && $branch = master ]]; then
+        echo "Current branch is $branch, skipping check for branch in " \
+             $remote_repos
+        return 1
     fi
 
     if ! git ls-remote \
