@@ -7,12 +7,12 @@ function maybe_make_inline_grails_dep {
     if [[ $result -eq 0 ]]; then
         shift 2
         if [[ -z $1 ]]; then
-            (set -e; _make_inline_dependency "$directory")
+            (set -e; make_inline_dependency "$directory")
             return $?
         else
             local subdir
             for subdir in "$@"; do
-                (set -e; _make_inline_dependency "$directory/$subdir")
+                (set -e; make_inline_dependency "$directory/$subdir")
                 if [[ $? -ne 0 ]]; then
                     return $?
                 fi
@@ -28,7 +28,7 @@ function maybe_make_inline_grails_dep {
 
 BUILD_CONFIG_FILE="grails-app/conf/BuildConfig.groovy"
 
-function _make_inline_dependency {
+function make_inline_dependency {
     local readonly dependency_dir="$1"
     local depname
 
