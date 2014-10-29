@@ -1,5 +1,11 @@
 env | grep ^TRAVIS # for troubleshooting
 
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [[ ! -f /usr/share/perl5/JSON.pm ]]; then
+    sudo apt-get install -y -qq libjson-perl
+fi
+
 # Run the grails version for the current project, downloading it if necessary
 function _grails {
     local grails_bin=/usr/bin/grails
@@ -29,8 +35,14 @@ function grails {
 # print the name of the relevant branch
 function get_branch {
     local branch_name=$(git symbolic-ref -q HEAD)
+    local readonly pr_data=$(get_pr_data)
     branch_name=${branch_name##refs/heads/}
     branch_name=${branch_name:-HEAD}
+
+    if [[ -n $pr_data ]]; then
+        echo "$pr_data" | perl "$DIR"/extract_label.pl | cut -d: -f2
+        return
+    fi
 
     #travis works with a detached HEAD, and we have too look at its env vars
     if [[ $TRAVIS = true && $branch_name = 'HEAD' ]]; then
@@ -104,8 +116,31 @@ function maybe_checkout_project_branch {
     return 1
 }
 
+PR_DATA_LOCATION=/tmp/pr_data
+function get_pr_data {
+    if [[ -z $TRAVIS_PULL_REQUEST ]]; then
+        return
+    fi
+
+    if [[ ! -f $PR_DATA_LOCATION ]]; then
+        curl -s -o "$PR_DATA_LOCATION" \
+            https://api.github.com/repos/"$TRAVIS_REPO_SLUG"/pulls/$TRAVIS_PULL_REQUEST
+        if [[ $? -ne 0 ]]; then
+            echo "Could not fetch PR data" >&2
+            exit 1
+        fi
+    fi
+
+    cat "$PR_DATA_LOCATION"
+}
+
 function travis_get_owner {
-    echo $(cut -d/ -f1 <<< "$TRAVIS_REPO_SLUG")
+    local readonly pr_data=$(get_pr_data)
+    if [[ -n $pr_data ]]; then
+        echo "$pr_data" | perl "$DIR"/extract_label.pl | cut -d: -f1
+    else
+        echo "$TRAVIS_REPO_SLUG" | cut -d/ -f1
+    fi
 }
 
 # vim: et tw=80 ts=4 sw=4:
