@@ -2,10 +2,6 @@ env | grep ^TRAVIS # for troubleshooting
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [[ ! -f /usr/share/perl5/JSON.pm ]]; then
-    sudo apt-get install -y -qq libjson-perl
-fi
-
 # Run the grails version for the current project, downloading it if necessary
 function _grails {
     local grails_bin=/usr/bin/grails
@@ -137,6 +133,9 @@ function get_pr_data {
 function travis_get_owner {
     local readonly pr_data=$(get_pr_data)
     if [[ -n $pr_data ]]; then
+        if [[ ! -f /usr/share/perl5/JSON.pm ]]; then
+            sudo apt-get install -y -qq libjson-perl
+        fi
         echo "$pr_data" | perl "$DIR"/extract_label.pl | cut -d: -f1
     else
         echo "$TRAVIS_REPO_SLUG" | cut -d/ -f1
