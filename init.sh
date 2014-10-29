@@ -31,12 +31,12 @@ function grails {
 # print the name of the relevant branch
 function get_branch {
     local branch_name=$(git symbolic-ref -q HEAD)
-    local readonly pr_data=$(get_pr_data)
+    local readonly pr_label=$(get_pr_label)
     branch_name=${branch_name##refs/heads/}
     branch_name=${branch_name:-HEAD}
 
-    if [[ -n $pr_data ]]; then
-        echo "$pr_data" | perl "$DIR"/extract_label.pl | cut -d: -f2
+    if [[ -n $pr_label ]]; then
+        echo "$pr_label" | cut -d: -f2
         return
     fi
 
@@ -113,7 +113,7 @@ function maybe_checkout_project_branch {
 }
 
 PR_DATA_LOCATION=/tmp/pr_data
-function get_pr_data {
+function get_pr_label {
     if [[ -z $TRAVIS_PULL_REQUEST ]]; then
         return
     fi
@@ -127,16 +127,17 @@ function get_pr_data {
         fi
     fi
 
-    cat "$PR_DATA_LOCATION"
+    if [[ ! -f /usr/share/perl5/JSON.pm ]]; then
+        sudo apt-get install -y -qq libjson-perl > /dev/null
+    fi
+
+    perl "$DIR"/extract_label.pl < "$PR_DATA_LOCATION"
 }
 
 function travis_get_owner {
-    local readonly pr_data=$(get_pr_data)
-    if [[ -n $pr_data ]]; then
-        if [[ ! -f /usr/share/perl5/JSON.pm ]]; then
-            sudo apt-get install -y -qq libjson-perl
-        fi
-        echo "$pr_data" | perl "$DIR"/extract_label.pl | cut -d: -f1
+    local readonly pr_label=$(get_pr_label)
+    if [[ -n $pr_label ]]; then
+        echo "$pr_label" | cut -d: -f1
     else
         echo "$TRAVIS_REPO_SLUG" | cut -d/ -f1
     fi
