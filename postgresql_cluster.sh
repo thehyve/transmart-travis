@@ -4,6 +4,7 @@ PG_DATA=$HOME/pgdata
 function install_pg {
   local readonly version=$1
   if [[ -x "$PG_LOCATION"/bin/psql && "$("$PG_LOCATION"/bin/psql --version | cut -d' ' -f3)" = "$version" ]]; then
+    echo "PostgreSQL was cached and it's the correct version; no need to reinstall"
     return
   fi
 
