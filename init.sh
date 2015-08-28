@@ -112,6 +112,16 @@ function maybe_checkout_project_branch {
     return 1
 }
 
+function checkout_project_branch_with_fallback {
+    local readonly slug=$1 fallback=$2 target_dir="${3:-${1##*/}}"
+    local readonly remote_repos="git://github.com/${slug}.git"
+
+    maybe_checkout_project_branch "$slug" "$target_dir"
+    if [[ $? -eq 1 ]]; then
+        git clone --depth=50 --branch="$fallback" "$remote_repos" "$target_dir"
+    fi
+}
+
 PR_DATA_LOCATION=/tmp/pr_data
 function get_pr_label {
     local cred_pars=() url= re='^[0-9]+$'
