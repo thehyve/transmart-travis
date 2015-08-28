@@ -119,7 +119,7 @@ function get_pr_label {
     fi
 
     if [[ ! -f $PR_DATA_LOCATION ]]; then
-        curl -s -o "$PR_DATA_LOCATION" \
+        curl -v -f -s -o "$PR_DATA_LOCATION" \
             https://api.github.com/repos/"$TRAVIS_REPO_SLUG"/pulls/$TRAVIS_PULL_REQUEST
         if [[ $? -ne 0 ]]; then
             echo "Could not fetch PR data" >&2
@@ -127,11 +127,15 @@ function get_pr_label {
         fi
     fi
 
-    if [[ ! -f /usr/share/perl5/JSON.pm ]]; then
+    if [[ -f /usr/share/perl5/JSON.pm ]]; then
+        perl "$DIR"/extract_label.pl < "$PR_DATA_LOCATION"
+    elif [[ $(php -r 'echo function_exists("json_decode");') -eq 1 ]]; then
+        php "$DIR"/extract_label.php < "$PR_DATA_LOCATION"
+    else
         sudo apt-get install -y -qq libjson-perl > /dev/null
+        perl "$DIR"/extract_label.pl < "$PR_DATA_LOCATION"
     fi
 
-    perl "$DIR"/extract_label.pl < "$PR_DATA_LOCATION"
 }
 
 function travis_get_owner {
