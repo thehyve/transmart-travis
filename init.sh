@@ -114,9 +114,9 @@ function maybe_checkout_project_branch {
 
 PR_DATA_LOCATION=/tmp/pr_data
 function get_pr_label {
-    local cred_pars=()
+    local cred_pars=() url= re='^[0-9]+$'
 
-    if [[ -z $TRAVIS_PULL_REQUEST ]]; then
+    if [[ ! $TRAVIS_PULL_REQUEST =~ $re ]]; then
         return
     fi
 
@@ -125,9 +125,9 @@ function get_pr_label {
     fi
 
     if [[ ! -f $PR_DATA_LOCATION ]]; then
-        curl -f -s -o "$PR_DATA_LOCATION" \
-            https://api.github.com/repos/"$TRAVIS_REPO_SLUG"/pulls/$TRAVIS_PULL_REQUEST \
-            "${cred_pars[@]}"
+        url=https://api.github.com/repos/"$TRAVIS_REPO_SLUG"/pulls/$TRAVIS_PULL_REQUEST
+        echo "Will request $url" >&2
+        curl -f -s -o "$PR_DATA_LOCATION" "$url" "${cred_pars[@]}"
         if [[ $? -ne 0 ]]; then
             echo "Could not fetch PR data" >&2
             exit 1
@@ -147,6 +147,9 @@ function get_pr_label {
 
 function travis_get_owner {
     local readonly pr_label=$(get_pr_label)
+    if [[ $? -ne 0 ]]; then
+        return $?
+    fi
     if [[ -n $pr_label ]]; then
         echo "$pr_label" | cut -d: -f1
     else
