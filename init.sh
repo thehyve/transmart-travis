@@ -114,13 +114,20 @@ function maybe_checkout_project_branch {
 
 PR_DATA_LOCATION=/tmp/pr_data
 function get_pr_label {
+    local cred_pars=()
+
     if [[ -z $TRAVIS_PULL_REQUEST ]]; then
         return
     fi
 
+    if [[ -n $GITHUB_CREDS ]]; then
+        cred_pars=('-u' "$GITHUB_CREDS")
+    fi
+
     if [[ ! -f $PR_DATA_LOCATION ]]; then
-        curl -v -f -s -o "$PR_DATA_LOCATION" \
-            https://api.github.com/repos/"$TRAVIS_REPO_SLUG"/pulls/$TRAVIS_PULL_REQUEST
+        curl -f -s -o "$PR_DATA_LOCATION" \
+            https://api.github.com/repos/"$TRAVIS_REPO_SLUG"/pulls/$TRAVIS_PULL_REQUEST \
+            "${cred_pars[@]}"
         if [[ $? -ne 0 ]]; then
             echo "Could not fetch PR data" >&2
             exit 1
