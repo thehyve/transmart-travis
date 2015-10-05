@@ -1,11 +1,28 @@
-function maybe_make_inline_grails_dep {
-    local readonly repository=${1:?'github repository (e.g. thehyve/transmart-core-db) missing'}
-    local readonly directory=${2:?'target directory missing'}
+function make_inline_grails_dep {
+    _make_inline_grails_dep "$@"
+}
 
-    maybe_checkout_project_branch "$repository" "$directory"
+function maybe_make_inline_grails_dep {
+    local readonly repository=$1
+    shift 1
+    _make_inline_grails_dep "$repository" "" "$@"
+}
+
+function _make_inline_grails_dep {
+    local readonly repository=${1:?'github repository (e.g. thehyve/transmart-core-db) missing'}
+    local readonly fallback_branch=$2
+    local readonly directory=${3:?'target directory missing'}
+
+    if [[ -z $fallback_branch ]]; then
+        maybe_checkout_project_branch "$repository" "$directory"
+    else
+        checkout_project_branch_with_fallback \
+            "$repository" "$fallback_branch" "$directory"
+    fi
+
     local readonly result=$?
     if [[ $result -eq 0 ]]; then
-        shift 2
+        shift 3
         if [[ -z $1 ]]; then
             (set -e; make_inline_dependency "$directory")
             return $?
