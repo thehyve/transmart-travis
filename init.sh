@@ -98,8 +98,7 @@ function maybe_checkout_project_branch {
     local readonly target_dir="${2:-${1##*/}}"
     local readonly branch="$(get_branch)"
     local readonly repo_owner=$(cut -d/ -f1 <<< "$1")
-    local readonly do_master=$([[ $repo_owner != 'thehyve' ]] \
-            && echo yes || echo no)
+    local readonly do_master=yes
 
     if has_dedicated_branch "$remote_repos" "$branch" "$do_master"; then
         git clone --depth=50 --branch="$branch" "$remote_repos" "$target_dir"
