@@ -13,6 +13,7 @@ function install_rserve {
       echo "Rserve installed and newer than transmartdata/R ($time_installed / $time_repos); no need to reinstall"
       return
     else
+      echo "Installed Rserve is stale: time installed is $time_installed; newest time of repos files is: $time_repos"
       rm -rf "$SERVE_LOCATION"
     fi
   fi
