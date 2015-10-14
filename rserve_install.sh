@@ -6,7 +6,7 @@ function install_rserve {
   #needs libcairo-dev clang gfortran g++ libreadline-dev
 
   if [[ -x "$RSERVE_LOCATION"/bin/R ]]; then
-    time_repos=$(echo $(cd $transmartdata; git ls-files --debug R | grep mtime: | cut -d: -f 2 | sort -bn | tail -1))
+    time_repos=$(echo $(cd $transmartdata; git log --pretty=%at -n1 -- R/))
     time_installed=$(stat --printf='%Y' "$RSERVE_LOCATION"/bin/R)
 
     if [[ $time_installed -gt $time_repos ]]; then
