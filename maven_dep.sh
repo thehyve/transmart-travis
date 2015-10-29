@@ -1,8 +1,23 @@
+function build_maven_dep {
+    _build_maven_dep "$@"
+}
 function maybe_build_maven_dep {
+    local readonly repository=$1
+    shift 1
+    _build_maven_dep "$repository" "" "$@"
+}
+function _build_maven_dep {
     local readonly repository=${1:?'github repository (e.g. thehyve/transmart-core-api) missing'}
-    local readonly directory=${2:?'target directory missing'}
+    local readonly fallback_branch=$2
+    local readonly directory=${3:?'target directory missing'}
 
-    maybe_checkout_project_branch "$repository" "$directory"
+    if [[ -z $fallback_branch ]]; then
+        maybe_checkout_project_branch "$repository" "$directory"
+    else
+        checkout_project_branch_with_fallback \
+            "$repository" "$fallback_branch" "$directory"
+    fi
+
     local readonly result=$?
     if [[ $result -eq 0 ]]; then
         (set -e; _install_maven_project "$directory")
