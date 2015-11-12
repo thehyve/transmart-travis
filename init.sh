@@ -1,4 +1,4 @@
-env | grep ^TRAVIS # for troubleshooting
+env | grep ^TRAVIS || true # for troubleshooting
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
